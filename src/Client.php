@@ -2,6 +2,8 @@
 
 namespace Mosparo\ApiClient;
 
+use GuzzleHttp\Client as GuzzleClient;
+
 class Client
 {
     protected $host;
@@ -64,7 +66,7 @@ class Client
             'base_uri' => $this->host,
         ], $this->clientArguments);
 
-        $client = new GuzzleHttp\Client($args);
+        $client = new GuzzleClient($args);
 
         $response = $client->request('POST', $url, $data);
         $result = json_decode($response->getBody()->getContents());
