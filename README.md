@@ -1,1 +1,1 @@
-# php-api-client
+# mosparo PHP API Client
