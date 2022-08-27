@@ -42,9 +42,9 @@ class Client
     protected array $clientArguments;
 
     /**
-     * @var array
+     * @var \stdClass
      */
-    protected array $lastResult;
+    protected \stdClass $lastResult;
 
     /**
      * Constructs the object
@@ -65,9 +65,9 @@ class Client
     /**
      * Returns the last mosparo result
      *
-     * @return array|null
+     * @return \stdClass|null
      */
-    public function getLastResult(): ?array
+    public function getLastResult(): ?\stdClass
     {
         return $this->lastResult;
     }
