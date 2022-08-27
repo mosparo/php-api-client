@@ -72,6 +72,8 @@ class Client
      */
     public function validateSubmission(array $formData, string $submitToken = null, string $validationToken = null): bool
     {
+        $requestHelper = new RequestHelper($this->publicKey, $this->privateKey);
+
         if ($submitToken === null && isset($formData['_mosparo_submitToken'])) {
             $submitToken = $formData['_mosparo_submitToken'];
         }
@@ -84,23 +86,32 @@ class Client
             throw new Exception('Submit or validation token not available.');
         }
 
-        $formData = $this->cleanupFormData($formData);
-        $payload = http_build_query($formData) . $submitToken;
+        // Create the signatures
+        $formData = $requestHelper->prepareFormData($formData);
+        $formSignature = $requestHelper->createFormDataHmacHash($formData);
 
-        $validationSignature = $this->createHmacHash($validationToken);
-        $formSignature = $this->createHmacHash($payload);
-        $verificationSignature = $this->createHmacHash($validationSignature . $formSignature);
+        $validationSignature = $requestHelper->createHmacHash($validationToken);
+        $verificationSignature = $requestHelper->createHmacHash($validationSignature . $formSignature);
+
+        // Prepare the request
+        $apiEndpoint = '/api/v1/verification/verify';
+        $requestData = [
+            'submitToken' => $submitToken,
+            'validationSignature' => $validationSignature,
+            'formSignature' => $formSignature,
+            'formData' => $formData,
+        ];
+        $requestSignature = $requestHelper->createHmacHash($apiEndpoint . $formSignature);
 
         $data = [
-            'form_params' => [
-                'publicKey' => $this->publicKey,
-                'submitToken' => $submitToken,
-                'validationSignature' => $validationSignature,
-                'formSignature' => $formSignature,
-            ]
+            'auth' => [$this->publicKey, $requestSignature],
+            'headers' => [
+                'Accept' => 'application/json'
+            ],
+            'json' => $requestData
         ];
-        $result = $this->sendRequest('/api/v1/verification/verify', $data);
 
+        $result = $this->sendRequest($apiEndpoint, $data);
         if (isset($result->valid) && $result->valid && $result->verificationSignature === $verificationSignature) {
             return true;
         }
@@ -138,44 +149,5 @@ class Client
         }
 
         return $result;
-    }
-
-    /**
-     * Cleanups the given form data. The method removes possible
-     * mosparo fields from the data, converts all line breaks and converts
-     * the field keys to lower case characters.
-     *
-     * @param array $formData
-     * @return array
-     */
-    protected function cleanupFormData(array $formData): array
-    {
-        if (isset($formData['_mosparo_submitToken'])) {
-            unset($formData['_mosparo_submitToken']);
-        }
-
-        if (isset($formData['_mosparo_validationToken'])) {
-            unset($formData['_mosparo_validationToken']);
-        }
-
-        foreach ($formData as $key => $value) {
-            $formData[$key] = str_replace("\r\n", "\n", $value);
-        }
-
-        $formData = array_change_key_case($formData, CASE_LOWER);
-        ksort($formData);
-
-        return $formData;
-    }
-
-    /**
-     * Creates the HMAC hash for the given string
-     *
-     * @param string $data
-     * @return string
-     */
-    protected function createHmacHash(string $data): string
-    {
-        return hash_hmac('sha256', $data, $this->privateKey);
     }
 }
