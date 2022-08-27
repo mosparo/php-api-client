@@ -24,22 +24,27 @@ class Client
     /**
      * @var string
      */
-    protected $host;
+    protected string $host;
 
     /**
      * @var string
      */
-    protected $publicKey;
+    protected string $publicKey;
 
     /**
      * @var string
      */
-    protected $privateKey;
+    protected string $privateKey;
 
     /**
      * @var array
      */
-    protected $clientArguments;
+    protected array $clientArguments;
+
+    /**
+     * @var array
+     */
+    protected array $lastResult;
 
     /**
      * Constructs the object
@@ -55,6 +60,16 @@ class Client
         $this->publicKey = $publicKey;
         $this->privateKey = $privateKey;
         $this->clientArguments = $clientArguments;
+    }
+
+    /**
+     * Returns the last mosparo result
+     *
+     * @return array|null
+     */
+    public function getLastResult(): ?array
+    {
+        return $this->lastResult;
     }
 
     /**
@@ -101,7 +116,7 @@ class Client
             'formSignature' => $formSignature,
             'formData' => $formData,
         ];
-        $requestSignature = $requestHelper->createHmacHash($apiEndpoint . $formSignature);
+        $requestSignature = $requestHelper->createHmacHash($apiEndpoint . $requestHelper->toJson($requestData));
 
         $data = [
             'auth' => [$this->publicKey, $requestSignature],
@@ -111,8 +126,8 @@ class Client
             'json' => $requestData
         ];
 
-        $result = $this->sendRequest($apiEndpoint, $data);
-        if (isset($result->valid) && $result->valid && $result->verificationSignature === $verificationSignature) {
+        $this->lastResult = $this->sendRequest($apiEndpoint, $data);
+        if (isset($this->lastResult->valid) && $this->lastResult->valid && $this->lastResult->verificationSignature === $verificationSignature) {
             return true;
         }
 
