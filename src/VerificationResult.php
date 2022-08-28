@@ -82,7 +82,7 @@ class VerificationResult
      * 
      * @return array
      */
-    public function getVerifiedFeidls(): array
+    public function getVerifiedFields(): array
     {
         return $this->verifiedFields;
     }
