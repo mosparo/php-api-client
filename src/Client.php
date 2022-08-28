@@ -12,7 +12,6 @@ namespace Mosparo\ApiClient;
 
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\GuzzleException;
-use stdClass;
 
 /**
  * The mosparo PHP client
@@ -42,11 +41,6 @@ class Client
     protected array $clientArguments;
 
     /**
-     * @var array
-     */
-    protected array $lastResult;
-
-    /**
      * Constructs the object
      *
      * @param string $host Host of the mosparo installation
@@ -63,29 +57,19 @@ class Client
     }
 
     /**
-     * Returns the last mosparo result
-     *
-     * @return array|null
-     */
-    public function getLastResult(): ?array
-    {
-        return $this->lastResult;
-    }
-
-    /**
      * Validates the given form data with the configured mosparo
-     * instance. Returns true if the submission is valid or false if the
-     * submission isn't valid.
+     * instance. Returns a VerificationResult object which contains
+     * all needed informations.
      *
      * @param array $formData
      * @param string $submitToken
      * @param string $validationToken
-     * @return bool
+     * @return \Mosparo\ApiClient\VerificationResult
      *
      * @throws \Mosparo\ApiClient\Exception Submit or validation token not available.
      * @throws \Mosparo\ApiClient\Exception An error occurred while sending the request to mosparo.
      */
-    public function validateSubmission(array $formData, string $submitToken = null, string $validationToken = null): bool
+    public function validateSubmission(array $formData, string $submitToken = null, string $validationToken = null): VerificationResult
     {
         $requestHelper = new RequestHelper($this->publicKey, $this->privateKey);
 
@@ -126,12 +110,23 @@ class Client
             'json' => $requestData
         ];
 
-        $this->lastResult = $this->sendRequest($apiEndpoint, $data);
-        if (isset($this->lastResult->valid) && $this->lastResult->valid && $this->lastResult->verificationSignature === $verificationSignature) {
-            return true;
+        $res = $this->sendRequest($apiEndpoint, $data);
+
+        // Check if it is submittable
+        $isSubmittable = false;
+        $issues = $res['issues'] ?? [];
+        if (isset($res['valid']) && $res['valid'] && $res['verificationSignature'] === $verificationSignature) {
+            $isSubmittable = true;
+        } else if (isset($res['error']) && $res['error']) {
+            $issues[] = [ 'message' => $res['errorMessage'] ];
         }
 
-        return false;
+        return new VerificationResult(
+            $isSubmittable,
+            $res['valid'] ?? false,
+            $res['verifiedFields'] ?? [],
+            $issues
+        );
     }
 
     /**
@@ -139,12 +134,12 @@ class Client
      *
      * @param string $url
      * @param string $data
-     * @return \StdClass
+     * @return array
      *
      * @throws \Mosparo\ApiClient\Exception An error occurred while sending the request to mosparo.
      * @throws \Mosparo\ApiClient\Exception Response from API invalid.
      */
-    protected function sendRequest(string $url, array $data): StdClass
+    protected function sendRequest(string $url, array $data): array
     {
         $args = array_merge([
             'base_uri' => $this->host,
@@ -154,7 +149,7 @@ class Client
 
         try {
             $response = $client->request('POST', $url, $data);
-            $result = json_decode((string) $response->getBody());
+            $result = json_decode((string) $response->getBody(), true);
         } catch (GuzzleException $e) {
             throw new Exception('An error occurred while sending the request to mosparo.', 0, $e);
         }
