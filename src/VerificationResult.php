@@ -74,7 +74,7 @@ class VerificationResult
      */
     public function isValid(): bool
     {
-        return ($this->result);
+        return ($this->valid);
     }
 
     /**

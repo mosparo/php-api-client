@@ -115,7 +115,7 @@ class Client
         // Check if it is submittable
         $isSubmittable = false;
         $issues = $res['issues'] ?? [];
-        if (isset($res['valid']) && $res['valid'] && $res['verificationSignature'] === $verificationSignature) {
+        if (isset($res['valid']) && $res['valid'] && isset($res['verificationSignature']) && $res['verificationSignature'] === $verificationSignature) {
             $isSubmittable = true;
         } else if (isset($res['error']) && $res['error']) {
             $issues[] = [ 'message' => $res['errorMessage'] ];

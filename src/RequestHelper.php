@@ -122,6 +122,19 @@ class RequestHelper
      */
     public function toJson(array $inData): string
     {
+        $data = $this->prepareDataForJson($inData);
+
+        return json_encode($data);
+    }
+
+    /**
+     * Convert the data to strings to serialize it as JSON
+     *
+     * @param array $inData
+     * @return array
+     */
+    protected function prepareDataForJson(array $inData): array
+    {
         $data = [];
 
         foreach ($inData as $key => $value) {
@@ -130,7 +143,7 @@ class RequestHelper
             }
 
             if (is_array($value)) {
-                $data[$key] = $this->toJson($value);
+                $data[$key] = $this->prepareDataForJson($value);
             } else if (!is_string($value)) {
                 $data[$key] = (string) $value;
             } else {
@@ -138,6 +151,6 @@ class RequestHelper
             }
         }
 
-        return json_encode($data);
+        return $data;
     }
 }
