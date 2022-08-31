@@ -81,34 +81,37 @@ class ClientTest extends TestCase
 
     public function testValidateSubmissionIsValid()
     {
+        $publicKey = 'testPublicKey';
         $privateKey = 'testPrivateKey';
         $submitToken = 'submitToken';
         $validationToken = 'validationToken';
         $formData = ['name' => 'John Example'];
 
         // Prepare the test data
-        $preparedFormData = $this->cleanupFormData($formData);
-        $payload = http_build_query($preparedFormData) . $submitToken;
+        $requestHelper = new RequestHelper($publicKey, $privateKey);
 
-        $validationSignature = $this->createHmacHash($validationToken, $privateKey);
-        $formSignature = $this->createHmacHash($payload, $privateKey);
-        $verificationSignature = $this->createHmacHash($validationSignature . $formSignature, $privateKey);
+        $preparedFormData = $requestHelper->prepareFormData($formData);
+        $formSignature = $requestHelper->createFormDataHmacHash($preparedFormData);
+
+        $validationSignature = $requestHelper->createHmacHash($validationToken);
+        $verificationSignature = $requestHelper->createHmacHash($validationSignature . $formSignature);
 
         // Set the response
         $this->handler->append(new Response(200, ['Content-Type' => 'application/json'], json_encode(['valid' => true, 'verificationSignature' => $verificationSignature])));
 
         // Start the test
-        $apiClient = new Client('http://test.local', 'testPublicKey', $privateKey, ['handler' => $this->handlerStack]);
+        $apiClient = new Client('http://test.local', $publicKey, $privateKey, ['handler' => $this->handlerStack]);
 
         $result = $apiClient->validateSubmission($formData, $submitToken, $validationToken);
 
         // Check the result
-        $this->assertTrue($result);
+        $this->assertInstanceOf(VerificationResult::class, $result);
         $this->assertEquals(count($this->history), 1);
+        $this->assertTrue($result->isSubmittable());
 
-        parse_str((string) $this->history[0]['request']->getBody(), $requestData);
+        $requestData = json_decode((string) $this->history[0]['request']->getBody(), true);
 
-        $this->assertEquals($requestData['publicKey'], 'testPublicKey');
+        $this->assertEquals($requestData['formData'], $preparedFormData);
         $this->assertEquals($requestData['submitToken'], 'submitToken');
         $this->assertEquals($requestData['validationSignature'], $validationSignature);
         $this->assertEquals($requestData['formSignature'], $formSignature);
@@ -116,18 +119,19 @@ class ClientTest extends TestCase
 
     public function testValidateSubmissionIsNotValid()
     {
+        $publicKey = 'testPublicKey';
         $privateKey = 'testPrivateKey';
         $submitToken = 'submitToken';
         $validationToken = 'validationToken';
         $formData = ['name' => 'John Example'];
 
         // Prepare the test data
-        $preparedFormData = $this->cleanupFormData($formData);
-        $payload = http_build_query($preparedFormData) . $submitToken;
+        $requestHelper = new RequestHelper($publicKey, $privateKey);
 
-        $validationSignature = $this->createHmacHash($validationToken, $privateKey);
-        $formSignature = $this->createHmacHash($payload, $privateKey);
-        $verificationSignature = $this->createHmacHash($validationSignature . $formSignature, $privateKey);
+        $preparedFormData = $requestHelper->prepareFormData($formData);
+        $formSignature = $requestHelper->createFormDataHmacHash($preparedFormData);
+
+        $validationSignature = $requestHelper->createHmacHash($validationToken);
 
         // Set the response
         $this->handler->append(new Response(200, ['Content-Type' => 'application/json'], json_encode(['error' => true, 'errorMessage' => 'Validation failed.'])));
@@ -138,43 +142,15 @@ class ClientTest extends TestCase
         $result = $apiClient->validateSubmission($formData, $submitToken, $validationToken);
 
         // Check the result
-        $this->assertFalse($result);
+        $this->assertInstanceOf(VerificationResult::class, $result);
         $this->assertEquals(count($this->history), 1);
+        $this->assertFalse($result->isSubmittable());
 
-        parse_str((string) $this->history[0]['request']->getBody(), $requestData);
+        $requestData = json_decode((string) $this->history[0]['request']->getBody(), true);
 
-        $this->assertEquals($requestData['publicKey'], 'testPublicKey');
+        $this->assertEquals($requestData['formData'], $preparedFormData);
         $this->assertEquals($requestData['submitToken'], 'submitToken');
         $this->assertEquals($requestData['validationSignature'], $validationSignature);
         $this->assertEquals($requestData['formSignature'], $formSignature);
-    }
-
-
-    /**
-     * Internal methods to simulate the client functionality
-     */
-    protected function cleanupFormData(array $formData): array
-    {
-        if (isset($formData['_mosparo_submitToken'])) {
-            unset($formData['_mosparo_submitToken']);
-        }
-
-        if (isset($formData['_mosparo_validationToken'])) {
-            unset($formData['_mosparo_validationToken']);
-        }
-
-        foreach ($formData as $key => $value) {
-            $formData[$key] = str_replace("\r\n", "\n", $value);
-        }
-
-        $formData = array_change_key_case($formData, CASE_LOWER);
-        ksort($formData);
-
-        return $formData;
-    }
-
-    protected function createHmacHash(string $data, string $privateKey): string
-    {
-        return hash_hmac('sha256', $data, $privateKey);
     }
 }
