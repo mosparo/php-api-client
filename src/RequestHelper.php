@@ -97,7 +97,6 @@ class RequestHelper
             $formData[$key] = str_replace("\r\n", "\n", $value);
         }
 
-        $formData = array_change_key_case($formData, CASE_LOWER);
         ksort($formData);
 
         return $formData;
