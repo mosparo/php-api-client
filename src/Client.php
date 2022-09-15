@@ -110,7 +110,7 @@ class Client
             'json' => $requestData
         ];
 
-        $res = $this->sendRequest($apiEndpoint, $data);
+        $res = $this->sendRequest('POST', $apiEndpoint, $data);
 
         // Check if it is submittable
         $isSubmittable = false;
@@ -129,9 +129,56 @@ class Client
         );
     }
 
+
+
+    /**
+     * Retrieves the statistics data from mosparo for the given time range,
+     * counted by date.
+     *
+     * @param int $range Time range in seconds
+     * @return \Mosparo\ApiClient\StatisticResult
+     *
+     * @throws \Mosparo\ApiClient\Exception Submit or validation token not available.
+     * @throws \Mosparo\ApiClient\Exception An error occurred while sending the request to mosparo.
+     */
+    public function getStatisticByDate(int $range = 0): StatisticResult
+    {
+        $requestHelper = new RequestHelper($this->publicKey, $this->privateKey);
+
+        // Prepare the request
+        $apiEndpoint = '/api/v1/statistic/by-date';
+        $queryData = [];
+        if ($range > 0) {
+            $queryData['range'] = $range;
+        }
+
+        $requestSignature = $requestHelper->createHmacHash($apiEndpoint . $requestHelper->toJson($queryData));
+
+        $data = [
+            'auth' => [$this->publicKey, $requestSignature],
+            'headers' => [
+                'Accept' => 'application/json'
+            ],
+            'query' => $queryData
+        ];
+
+        $res = $this->sendRequest('GET', $apiEndpoint, $data);
+
+        if (isset($res['error'])) {
+            throw new Exception($res['errorMessage'] ?? 'An error occurred in the connection to mosparo.');
+        }
+
+        return new StatisticResult(
+            $res['data']['numberOfValidSubmissions'],
+            $res['data']['numberOfSpamSubmissions'],
+            $res['data']['numbersByDate']
+        );
+    }
+
     /**
      * Sends the method to mosparo and returns the response.
      *
+     * @param string $method
      * @param string $url
      * @param string $data
      * @return array
@@ -139,7 +186,7 @@ class Client
      * @throws \Mosparo\ApiClient\Exception An error occurred while sending the request to mosparo.
      * @throws \Mosparo\ApiClient\Exception Response from API invalid.
      */
-    protected function sendRequest(string $url, array $data): array
+    protected function sendRequest(string $method, string $url, array $data): array
     {
         $args = array_merge([
             'base_uri' => $this->host,
@@ -148,7 +195,7 @@ class Client
         $client = new GuzzleClient($args);
 
         try {
-            $response = $client->request('POST', $url, $data);
+            $response = $client->request($method, $url, $data);
             $result = json_decode((string) $response->getBody(), true);
         } catch (GuzzleException $e) {
             throw new Exception('An error occurred while sending the request to mosparo.', 0, $e);
