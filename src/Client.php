@@ -129,8 +129,6 @@ class Client
         );
     }
 
-
-
     /**
      * Retrieves the statistics data from mosparo for the given time range,
      * counted by date.
