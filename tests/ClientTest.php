@@ -153,4 +153,95 @@ class ClientTest extends TestCase
         $this->assertEquals($requestData['validationSignature'], $validationSignature);
         $this->assertEquals($requestData['formSignature'], $formSignature);
     }
+
+    public function testGetStatisticByDateWithoutRange()
+    {
+        $publicKey = 'testPublicKey';
+        $privateKey = 'testPrivateKey';
+        $numbersByDate = [
+            '2021-04-29' => [
+                'numberOfValidSubmissions' => 0,
+                'numberOfSpamSubmissions' => 10
+            ]
+        ];
+
+        // Set the response
+        $this->handler->append(new Response(200, ['Content-Type' => 'application/json'], json_encode([
+            'result' => true,
+            'data' => [
+                'numberOfValidSubmissions' => 0,
+                'numberOfSpamSubmissions' => 10,
+                'numbersByDate' => $numbersByDate
+            ]
+        ])));
+
+        // Start the test
+        $apiClient = new Client('http://test.local', $publicKey, $privateKey, ['handler' => $this->handlerStack]);
+
+        $result = $apiClient->getStatisticByDate();
+
+        // Check the result
+        $this->assertInstanceOf(StatisticResult::class, $result);
+        $this->assertEquals(count($this->history), 1);
+
+        $this->assertEquals(0, $result->getNumberOfValidSubmissions());
+        $this->assertEquals(10, $result->getNumberOfSpamSubmissions());
+        $this->assertEquals($numbersByDate, $result->getNumbersByDate());
+    }
+
+    public function testGetStatisticByDateWithRange()
+    {
+        $publicKey = 'testPublicKey';
+        $privateKey = 'testPrivateKey';
+        $numbersByDate = [
+            '2021-04-29' => [
+                'numberOfValidSubmissions' => 2,
+                'numberOfSpamSubmissions' => 5
+            ]
+        ];
+
+        // Set the response
+        $this->handler->append(new Response(200, ['Content-Type' => 'application/json'], json_encode([
+            'result' => true,
+            'data' => [
+                'numberOfValidSubmissions' => 2,
+                'numberOfSpamSubmissions' => 5,
+                'numbersByDate' => $numbersByDate
+            ]
+        ])));
+
+        // Start the test
+        $apiClient = new Client('http://test.local', $publicKey, $privateKey, ['handler' => $this->handlerStack]);
+
+        $result = $apiClient->getStatisticByDate(3600);
+
+        // Check the result
+        $this->assertInstanceOf(StatisticResult::class, $result);
+        $this->assertEquals(count($this->history), 1);
+        $this->assertEquals('range=3600', $this->history[0]['request']->getUri()->getQuery());
+
+        $this->assertEquals(2, $result->getNumberOfValidSubmissions());
+        $this->assertEquals(5, $result->getNumberOfSpamSubmissions());
+        $this->assertEquals($numbersByDate, $result->getNumbersByDate());
+    }
+
+    public function testGetStatisticByDateReturnsError()
+    {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Request not valid');
+
+        $publicKey = 'testPublicKey';
+        $privateKey = 'testPrivateKey';
+
+        // Set the response
+        $this->handler->append(new Response(200, ['Content-Type' => 'application/json'], json_encode([
+            'error' => true,
+            'errorMessage' => 'Request not valid'
+        ])));
+
+        // Start the test
+        $apiClient = new Client('http://test.local', $publicKey, $privateKey, ['handler' => $this->handlerStack]);
+
+        $result = $apiClient->getStatisticByDate();
+    }
 }
