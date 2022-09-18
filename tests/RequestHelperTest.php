@@ -52,10 +52,11 @@ class RequestHelperTest extends TestCase
                 'street' => 'Teststreet',
                 'number' => 123,
             ],
-            'valid' => false
+            'valid' => false,
+            'data' => []
         ];
 
-        $targetJson = '{"name":"Test Tester","address":{"street":"Teststreet","number":"123"},"valid":"0"}';
+        $targetJson = '{"name":"Test Tester","address":{"street":"Teststreet","number":123},"valid":false,"data":{}}';
 
         $this->assertEquals($targetJson, $requestHelper->toJson($data));
     }
@@ -70,10 +71,11 @@ class RequestHelperTest extends TestCase
                 'street' => 'Teststreet',
                 'number' => 123,
             ],
-            'valid' => false
+            'valid' => false,
+            'data' => []
         ];
 
-        $targetJson = '{"name":"Test Tester","address":{"street":"Teststreet","number":"123"},"valid":"0"}';
+        $targetJson = '{"name":"Test Tester","address":{"street":"Teststreet","number":123},"valid":false,"data":{}}';
         $targetValue = hash_hmac('sha256', $targetJson, $this->privateKey);
 
         $this->assertEquals($targetValue, $requestHelper->createFormDataHmacHash($data));

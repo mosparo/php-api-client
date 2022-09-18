@@ -116,40 +116,17 @@ class RequestHelper
     /**
      * Converts the given array into a json string.
      *
-     * @param array $inData
+     * @param array $data
      * @return string
      */
-    public function toJson(array $inData): string
+    public function toJson(array $data): string
     {
-        $data = $this->prepareDataForJson($inData);
+        $json = json_encode($data);
 
-        return json_encode($data);
-    }
-
-    /**
-     * Convert the data to strings to serialize it as JSON
-     *
-     * @param array $inData
-     * @return array
-     */
-    protected function prepareDataForJson(array $inData): array
-    {
-        $data = [];
-
-        foreach ($inData as $key => $value) {
-            if ($value === false) {
-                $value = '0';
-            }
-
-            if (is_array($value)) {
-                $data[$key] = $this->prepareDataForJson($value);
-            } else if (!is_string($value)) {
-                $data[$key] = (string) $value;
-            } else {
-                $data[$key] = $value;
-            }
+        if ($json === '[]') {
+            $json = '{}';
         }
 
-        return $data;
+        return str_replace('[]', '{}', $json);
     }
 }
