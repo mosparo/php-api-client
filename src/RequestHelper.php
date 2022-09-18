@@ -123,10 +123,6 @@ class RequestHelper
     {
         $json = json_encode($data);
 
-        if ($json === '[]') {
-            $json = '{}';
-        }
-
         return str_replace('[]', '{}', $json);
     }
 }
