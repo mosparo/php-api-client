@@ -66,6 +66,10 @@ class RequestHelper
             if (is_array($value)) {
                 $data[$key] = $this->prepareFormData($value);
             } else {
+                if (is_numeric($value)) {
+                    $value = strval($value);
+                }
+
                 $data[$key] = hash('sha256', $value);
             }
         }
@@ -94,7 +98,16 @@ class RequestHelper
         }
 
         foreach ($formData as $key => $value) {
-            $formData[$key] = str_replace("\r\n", "\n", $value);
+            if (is_string($key) && strpos($key, '[]') !== false) {
+                unset($formData[$key]);
+                $key = substr($key, 0, strpos($key, '[]'));
+            }
+
+            if (is_iterable($value)) {
+                $formData[$key] = $this->cleanupFormData($value);
+            } else {
+                $formData[$key] = str_replace("\r\n", "\n", $value);
+            }
         }
 
         ksort($formData);
