@@ -76,7 +76,7 @@ $client = new Mosparo\ApiClient\Client($url, $publicKey, $privateKey, $args);
 ```
 
 #### Verify form data
-To verify the form data, call ```validateSubmission``` with the form data in an array and the submit and validation token, which mosparo generated on the form initialization and the form data validation. The method will return true, if everything is correct and the submission is valid, or false, if there was an error and the submission should not be processed.
+To verify the form data, call `validateSubmission` with the form data in an array and the submit and validation tokens, which mosparo generated on the form initialization and the form data validation. The method will return a `VerificationResult` object.
 ```php
 /**
  * @param array $formData Array with the form values. All not-processed fields by mosparo (hidden, checkbox, 
@@ -104,7 +104,7 @@ form data are valid.
 
 #### isValid(): boolean
 Returns true, if mosparo determined the form as valid. The difference to `isSubmittable()` is, that this
-is the raw result from mosparo while `isSubmittable()` also checks if the verification was done correctly.
+is the original result from mosparo while `isSubmittable()` also checks if the verification was done correctly.
 
 #### getVerifiedFields(): array (see Constants)
 Returns an array with all verified field keys.
