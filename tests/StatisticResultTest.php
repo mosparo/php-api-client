@@ -9,7 +9,7 @@ class StatisticResultTest extends TestCase
     public function testStatisticResult()
     {
         $byDate = [
-            ['2021-04-29' => ['numberOfValidSubmissions' => 2, 'numberOfSpamSubmissions' => 5]]
+            '2021-04-29' => ['numberOfValidSubmissions' => 2, 'numberOfSpamSubmissions' => 5]
         ];
         $statisticResult = new StatisticResult(10, 20, $byDate);
 

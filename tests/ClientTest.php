@@ -97,7 +97,12 @@ class ClientTest extends TestCase
         $verificationSignature = $requestHelper->createHmacHash($validationSignature . $formSignature);
 
         // Set the response
-        $this->handler->append(new Response(200, ['Content-Type' => 'application/json'], json_encode(['valid' => true, 'verificationSignature' => $verificationSignature])));
+        $this->handler->append(new Response(200, ['Content-Type' => 'application/json'], json_encode([
+            'valid' => true,
+            'verificationSignature' => $verificationSignature,
+            'verifiedFields' => [ 'name' => VerificationResult::FIELD_VALID ],
+            'issues' => []
+        ])));
 
         // Start the test
         $apiClient = new Client('http://test.local', $publicKey, $privateKey, ['handler' => $this->handlerStack]);
@@ -108,6 +113,9 @@ class ClientTest extends TestCase
         $this->assertInstanceOf(VerificationResult::class, $result);
         $this->assertEquals(count($this->history), 1);
         $this->assertTrue($result->isSubmittable());
+        $this->assertTrue($result->isValid());
+        $this->assertEquals(VerificationResult::FIELD_VALID, $result->getVerifiedField('name'));
+        $this->assertFalse($result->hasIssues());
 
         $requestData = json_decode((string) $this->history[0]['request']->getBody(), true);
 
@@ -145,6 +153,9 @@ class ClientTest extends TestCase
         $this->assertInstanceOf(VerificationResult::class, $result);
         $this->assertEquals(count($this->history), 1);
         $this->assertFalse($result->isSubmittable());
+        $this->assertFalse($result->isValid());
+        $this->assertTrue($result->hasIssues());
+        $this->assertEquals('Validation failed.', $result->getIssues()[0]['message']);
 
         $requestData = json_decode((string) $this->history[0]['request']->getBody(), true);
 
