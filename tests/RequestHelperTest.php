@@ -31,7 +31,8 @@ class RequestHelperTest extends TestCase
             'email[]' => [
                 'test@example.com'
             ],
-            'data' => []
+            'data' => [],
+            'website' => null,
         ];
 
         $targetArray = [
@@ -43,7 +44,8 @@ class RequestHelperTest extends TestCase
             'email' => [
                 '973dfe463ec85785f5f95af5ba3906eedb2d931c24e69824a89ea65dba4e813b'
             ],
-            'data' => []
+            'data' => [],
+            'website' => 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
         ];
 
         $this->assertEquals($targetArray, $requestHelper->prepareFormData($data));
@@ -65,7 +67,8 @@ class RequestHelperTest extends TestCase
             'email[]' => [
                 'test@example.com'
             ],
-            'data' => []
+            'data' => [],
+            'website' => null,
         ];
 
         $expectedData = [
@@ -79,6 +82,7 @@ class RequestHelperTest extends TestCase
             ],
             'name' => 'Test Tester',
             'valid' => false,
+            'website' => '',
         ];
 
         $this->assertEquals($expectedData, $requestHelper->cleanupFormData($data));
@@ -95,10 +99,11 @@ class RequestHelperTest extends TestCase
                 'number' => 123,
             ],
             'valid' => false,
-            'data' => []
+            'data' => [],
+            'email' => null,
         ];
 
-        $targetJson = '{"name":"Test Tester","address":{"street":"Teststreet","number":123},"valid":false,"data":{}}';
+        $targetJson = '{"name":"Test Tester","address":{"street":"Teststreet","number":123},"valid":false,"data":{},"email":null}';
 
         $this->assertEquals($targetJson, $requestHelper->toJson($data));
     }
@@ -114,9 +119,10 @@ class RequestHelperTest extends TestCase
                 'number' => 123,
             ],
             'valid' => false,
-            'data' => []
+            'data' => [],
+            'email' => null,
         ];
 
-        $this->assertEquals('408f7cfd222dcf2369c8c1655df2f8de489858e23d9e100233a5b09e748fd360', $requestHelper->createFormDataHmacHash($data));
+        $this->assertEquals('fb1ae1d7aa9a506fdebc1641cd466f3b0fdefa62c835a43c8001a24913f8b735', $requestHelper->createFormDataHmacHash($data));
     }
 }

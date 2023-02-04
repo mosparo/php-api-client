@@ -68,6 +68,8 @@ class RequestHelper
             } else {
                 if (is_numeric($value)) {
                     $value = strval($value);
+                } else if ($value === null) {
+                    $value = '';
                 }
 
                 $data[$key] = hash('sha256', $value);
@@ -106,6 +108,10 @@ class RequestHelper
             if (is_iterable($value)) {
                 $formData[$key] = $this->cleanupFormData($value);
             } else {
+                if ($value === null) {
+                    $value = '';
+                }
+
                 $formData[$key] = str_replace("\r\n", "\n", $value);
             }
         }
