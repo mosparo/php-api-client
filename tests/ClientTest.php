@@ -28,25 +28,25 @@ class ClientTest extends TestCase
         $this->handlerStack->push($historyMiddleware);
     }
 
-    public function testValidateSubmissionWithoutTokens()
+    public function testVerifySubmissionWithoutTokens()
     {
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('Submit or validation token not available.');
 
         $apiClient = new Client('http://test.local', 'testPublicKey', 'testPrivateKey', ['handler' => $this->handlerStack]);
-        $result = $apiClient->validateSubmission(['name' => 'John Example']);
+        $result = $apiClient->verifySubmission(['name' => 'John Example']);
     }
 
-    public function testValidateSubmissionWithoutValidationTokens()
+    public function testVerifySubmissionWithoutValidationTokens()
     {
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('Submit or validation token not available.');
 
         $apiClient = new Client('http://test.local', 'testPublicKey', 'testPrivateKey', ['handler' => $this->handlerStack]);
-        $result = $apiClient->validateSubmission(['name' => 'John Example', '_mosparo_submitToken' => 'submitToken']);
+        $result = $apiClient->verifySubmission(['name' => 'John Example', '_mosparo_submitToken' => 'submitToken']);
     }
 
-    public function testValidateSubmissionFormTokensEmptyResponse()
+    public function testVerifySubmissionFormTokensEmptyResponse()
     {
         $this->handler->append(new Response(200, ['Content-Type' => 'application/json'], json_encode([])));
 
@@ -54,10 +54,10 @@ class ClientTest extends TestCase
         $this->expectExceptionMessage('Response from API invalid.');
 
         $apiClient = new Client('http://test.local', 'testPublicKey', 'testPrivateKey', ['handler' => $this->handlerStack]);
-        $result = $apiClient->validateSubmission(['name' => 'John Example', '_mosparo_submitToken' => 'submitToken', '_mosparo_validationToken' => 'validationToken']);
+        $result = $apiClient->verifySubmission(['name' => 'John Example', '_mosparo_submitToken' => 'submitToken', '_mosparo_validationToken' => 'validationToken']);
     }
 
-    public function testValidateSubmissionTokensAsArgumentEmptyResponse()
+    public function testVerifySubmissionTokensAsArgumentEmptyResponse()
     {
         $this->handler->append(new Response(200, ['Content-Type' => 'application/json'], json_encode([])));
 
@@ -65,10 +65,10 @@ class ClientTest extends TestCase
         $this->expectExceptionMessage('Response from API invalid.');
 
         $apiClient = new Client('http://test.local', 'testPublicKey', 'testPrivateKey', ['handler' => $this->handlerStack]);
-        $result = $apiClient->validateSubmission(['name' => 'John Example'], 'submitToken', 'validationToken');
+        $result = $apiClient->verifySubmission(['name' => 'John Example'], 'submitToken', 'validationToken');
     }
 
-    public function testValidateSubmissionConnectionError()
+    public function testVerifySubmissionConnectionError()
     {
         $this->handler->append(new RequestException('Error Communicating with Server', new Request('GET', 'test')));
 
@@ -76,10 +76,10 @@ class ClientTest extends TestCase
         $this->expectExceptionMessage('An error occurred while sending the request to mosparo.');
 
         $apiClient = new Client('http://test.local', 'testPublicKey', 'testPrivateKey', ['handler' => $this->handlerStack]);
-        $result = $apiClient->validateSubmission(['name' => 'John Example'], 'submitToken', 'validationToken');
+        $result = $apiClient->verifySubmission(['name' => 'John Example'], 'submitToken', 'validationToken');
     }
 
-    public function testValidateSubmissionIsValid()
+    public function testVerifySubmissionIsValid()
     {
         $publicKey = 'testPublicKey';
         $privateKey = 'testPrivateKey';
@@ -107,7 +107,7 @@ class ClientTest extends TestCase
         // Start the test
         $apiClient = new Client('http://test.local', $publicKey, $privateKey, ['handler' => $this->handlerStack]);
 
-        $result = $apiClient->validateSubmission($formData, $submitToken, $validationToken);
+        $result = $apiClient->verifySubmission($formData, $submitToken, $validationToken);
 
         // Check the result
         $this->assertInstanceOf(VerificationResult::class, $result);
@@ -125,7 +125,7 @@ class ClientTest extends TestCase
         $this->assertEquals($requestData['formSignature'], $formSignature);
     }
 
-    public function testValidateSubmissionIsNotValid()
+    public function testVerifySubmissionIsNotValid()
     {
         $publicKey = 'testPublicKey';
         $privateKey = 'testPrivateKey';
@@ -147,7 +147,7 @@ class ClientTest extends TestCase
         // Start the test
         $apiClient = new Client('http://test.local', 'testPublicKey', $privateKey, ['handler' => $this->handlerStack]);
 
-        $result = $apiClient->validateSubmission($formData, $submitToken, $validationToken);
+        $result = $apiClient->verifySubmission($formData, $submitToken, $validationToken);
 
         // Check the result
         $this->assertInstanceOf(VerificationResult::class, $result);

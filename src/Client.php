@@ -59,7 +59,7 @@ class Client
     /**
      * Validates the given form data with the configured mosparo
      * instance. Returns a VerificationResult object which contains
-     * all needed informations.
+     * all needed information.
      *
      * @param array $formData
      * @param string $submitToken
@@ -69,7 +69,7 @@ class Client
      * @throws \Mosparo\ApiClient\Exception Submit or validation token not available.
      * @throws \Mosparo\ApiClient\Exception An error occurred while sending the request to mosparo.
      */
-    public function validateSubmission(array $formData, string $submitToken = null, string $validationToken = null): VerificationResult
+    public function verifySubmission(array $formData, string $submitToken = null, string $validationToken = null): VerificationResult
     {
         $requestHelper = new RequestHelper($this->publicKey, $this->privateKey);
 
@@ -127,6 +127,28 @@ class Client
             $res['verifiedFields'] ?? [],
             $issues
         );
+    }
+
+    /**
+     * DEPRECATED: Use Client::verifySubmission() instead.
+     *
+     * Validates the given form data with the configured mosparo
+     * instance. Returns a VerificationResult object which contains
+     * all needed information.
+     *
+     * @deprecated 1.0.2 This method has the wrong method name. Please use Client::verifySubmission() instead.
+     *
+     * @param array $formData
+     * @param string $submitToken
+     * @param string $validationToken
+     * @return \Mosparo\ApiClient\VerificationResult
+     *
+     * @throws \Mosparo\ApiClient\Exception Submit or validation token not available.
+     * @throws \Mosparo\ApiClient\Exception An error occurred while sending the request to mosparo.
+     */
+    public function validateSubmission(array $formData, string $submitToken = null, string $validationToken = null): VerificationResult
+    {
+        return $this->verifySubmission($formData, $submitToken, $validationToken);
     }
 
     /**
