@@ -50,7 +50,7 @@ $client = new Mosparo\ApiClient\Client($url, $publicKey, $privateKey, ['verify' 
 $mosparoSubmitToken = $_POST['_mosparo_submitToken'];
 $mosparoValidationToken = $_POST['_mosparo_validationToken'];
 
-$result = $client->validateSubmission($_POST, $mosparoSubmitToken, $mosparoValidationToken);
+$result = $client->verifySubmission($_POST, $mosparoSubmitToken, $mosparoValidationToken);
 
 if ($result->isSubmittable()) {
     // Send the email or process the data
@@ -76,7 +76,7 @@ $client = new Mosparo\ApiClient\Client($url, $publicKey, $privateKey, $args);
 ```
 
 #### Verify form data
-To verify the form data, call `validateSubmission` with the form data in an array and the submit and validation tokens, which mosparo generated on the form initialization and the form data validation. The method will return a `VerificationResult` object.
+To verify the form data, call `verifySubmission` with the form data in an array and the submit and validation tokens, which mosparo generated on the form initialization and the form data validation. The method will return a `VerificationResult` object.
 ```php
 /**
  * @param array $formData Array with the form values. All not-processed fields by mosparo (hidden, checkbox, 
@@ -88,7 +88,7 @@ To verify the form data, call `validateSubmission` with the form data in an arra
  * @throws \Mosparo\ApiClient\Exception Submit or validation token not available.
  * @throws \Mosparo\ApiClient\Exception An error occurred while sending the request to mosparo.
  */
-$result = $client->validateSubmission($formData, $mosparoSubmitToken, $mosparoValidationToken);
+$result = $client->verifySubmission($formData, $mosparoSubmitToken, $mosparoValidationToken);
 ```
 
 ### VerificationResult
