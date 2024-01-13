@@ -83,12 +83,25 @@ To verify the form data, call `verifySubmission` with the form data in an array 
  *                        radio and so on) have to be removed from this array
  * @param string $mosparoSubmitToken Submit token which mosparo returned on the form initialization
  * @param string $mosparoValidationToken Validation token which mosparo returned after the form was validated
- * @return Mosparo\ApiClient\VerificationResult Returns a VerificationResult object with the response from mosparo
+ * @return \Mosparo\ApiClient\VerificationResult Returns a VerificationResult object with the response from mosparo
  * 
  * @throws \Mosparo\ApiClient\Exception Submit or validation token not available.
  * @throws \Mosparo\ApiClient\Exception An error occurred while sending the request to mosparo.
  */
 $result = $client->verifySubmission($formData, $mosparoSubmitToken, $mosparoValidationToken);
+```
+
+#### Request the statistical data
+mosparo also has an API method to get the statistical data for a project. You can use the method `getStatisticByDate` to get the statistical data. You can specify the range in seconds or a start date from which mosparo should return the statistical data. This method will return a `StatisticResult` object.
+```php
+/**
+ * @param int $range = 0 The range in seconds for which mosparo should return the statistical data (will be rounded up to a full day since mosparo v1.1)
+ * @param \DateTime $startDate = null The Start date from which on mosparo should return the statistical data (requires mosparo v1.1)
+ * @return \Mosparo\ApiClient\StatisticResult Returns a StatisticResult object with the response from mosparo
+ * 
+ * @throws \Mosparo\ApiClient\Exception An error occurred while sending the request to mosparo.
+ */
+$result = $client->getStatisticByDate($range, $startDate);
 ```
 
 ### VerificationResult
@@ -117,3 +130,14 @@ Returns true, if there were verification issues.
 
 #### getIssues(): array
 Returns an array with all verification issues.
+
+### StatisticResult
+
+#### getNumberOfValidSubmissions(): int
+Returns the total number of valid submissions in the requested date range.
+
+#### getNumberOfSpamSubmissions(): int
+Returns the total number of spam submissions in the requested date range.
+
+#### getNumbersByDate(): array
+Returns an array with all statistical data for the requested time range. The date is the key in the array, while an array is set as a value. The array contains a key `numberOfValidSubmissions` with the number of valid submissions and a key `numberOfSpamSubmissions` with the number of spam submissions.

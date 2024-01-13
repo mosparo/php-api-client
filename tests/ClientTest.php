@@ -236,6 +236,42 @@ class ClientTest extends TestCase
         $this->assertEquals($numbersByDate, $result->getNumbersByDate());
     }
 
+    public function testGetStatisticByDateWithStartDate()
+    {
+        $publicKey = 'testPublicKey';
+        $privateKey = 'testPrivateKey';
+        $numbersByDate = [
+            '2021-04-29' => [
+                'numberOfValidSubmissions' => 2,
+                'numberOfSpamSubmissions' => 5
+            ]
+        ];
+
+        // Set the response
+        $this->handler->append(new Response(200, ['Content-Type' => 'application/json'], json_encode([
+            'result' => true,
+            'data' => [
+                'numberOfValidSubmissions' => 2,
+                'numberOfSpamSubmissions' => 5,
+                'numbersByDate' => $numbersByDate
+            ]
+        ])));
+
+        // Start the test
+        $apiClient = new Client('http://test.local', $publicKey, $privateKey, ['handler' => $this->handlerStack]);
+
+        $result = $apiClient->getStatisticByDate(0, new \DateTime('2024-01-01'));
+
+        // Check the result
+        $this->assertInstanceOf(StatisticResult::class, $result);
+        $this->assertEquals(count($this->history), 1);
+        $this->assertEquals('startDate=2024-01-01', $this->history[0]['request']->getUri()->getQuery());
+
+        $this->assertEquals(2, $result->getNumberOfValidSubmissions());
+        $this->assertEquals(5, $result->getNumberOfSpamSubmissions());
+        $this->assertEquals($numbersByDate, $result->getNumbersByDate());
+    }
+
     public function testGetStatisticByDateReturnsError()
     {
         $this->expectException(Exception::class);
@@ -254,5 +290,14 @@ class ClientTest extends TestCase
         $apiClient = new Client('http://test.local', $publicKey, $privateKey, ['handler' => $this->handlerStack]);
 
         $result = $apiClient->getStatisticByDate();
+    }
+
+    public function testDeprecatedValidateSubmissionMethod()
+    {
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Submit or validation token not available.');
+
+        $apiClient = new Client('http://test.local', 'testPublicKey', 'testPrivateKey', ['handler' => $this->handlerStack]);
+        $result = $apiClient->validateSubmission(['name' => 'John Example']);
     }
 }

@@ -68,8 +68,6 @@ class RequestHelper
             } else {
                 if (is_numeric($value)) {
                     $value = strval($value);
-                } else if ($value === null) {
-                    $value = '';
                 }
 
                 $data[$key] = hash('sha256', $value);

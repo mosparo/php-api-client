@@ -155,13 +155,14 @@ class Client
      * Retrieves the statistics data from mosparo for the given time range,
      * counted by date.
      *
-     * @param int $range Time range in seconds
+     * @param int $range Time range in seconds (will be rounded up to a full day since mosparo v1.1)
+     * @param \DateTime $startDate The start date from which the statistics are to be returned (requires mosparo v1.1)
      * @return \Mosparo\ApiClient\StatisticResult
      *
-     * @throws \Mosparo\ApiClient\Exception Submit or validation token not available.
      * @throws \Mosparo\ApiClient\Exception An error occurred while sending the request to mosparo.
+     * @throws \Mosparo\ApiClient\Exception Response from API invalid.
      */
-    public function getStatisticByDate(int $range = 0): StatisticResult
+    public function getStatisticByDate(int $range = 0, \DateTime $startDate = null): StatisticResult
     {
         $requestHelper = new RequestHelper($this->publicKey, $this->privateKey);
 
@@ -170,6 +171,10 @@ class Client
         $queryData = [];
         if ($range > 0) {
             $queryData['range'] = $range;
+        }
+
+        if ($startDate !== null) {
+            $queryData['startDate'] = $startDate->format('Y-m-d');
         }
 
         $requestSignature = $requestHelper->createHmacHash($apiEndpoint . $requestHelper->toJson($queryData));
