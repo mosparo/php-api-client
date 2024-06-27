@@ -45,7 +45,7 @@ composer require mosparo/php-api-client
 <?php
 require_once(__DIR__ . '/vendor/autoload.php');
 
-$client = new Mosparo\ApiClient\Client($url, $publicKey, $privateKey, ['verify' => false]);
+$client = new Mosparo\ApiClient\Client($url, $publicKey, $privateKey, [ /* Options for Guzzle */ ]);
 
 $mosparoSubmitToken = $_POST['_mosparo_submitToken'];
 $mosparoValidationToken = $_POST['_mosparo_validationToken'];
@@ -70,7 +70,7 @@ Create a new client object to use the API client.
  * @param string $url URL of the mosparo installation
  * @param string $publicKey Public key of the mosparo project
  * @param string $privateKey Private key of the mosparo project 
- * @param array $args Arguments for the Guzzle client
+ * @param array $args Arguments for the Guzzle client, see https://docs.guzzlephp.org/en/stable/request-options.html
  */
 $client = new Mosparo\ApiClient\Client($url, $publicKey, $privateKey, $args);
 ```
