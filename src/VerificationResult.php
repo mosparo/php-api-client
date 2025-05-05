@@ -4,7 +4,7 @@
  * Representates the verification result from the mosparo API.
  *
  * @author Matthias Zobrist <matthias.zobrist@zepi.net>
- * @copyright 2021-2022 mosparo
+ * @copyright 2021-2025 mosparo
  * @license MIT
  */
 
@@ -42,19 +42,26 @@ class VerificationResult
     private array $issues = [];
 
     /**
+     * @var array|null
+     */
+    private ?array $debugInformation = null;
+
+    /**
      * Constructs the object
      * 
      * @param bool $submittable
      * @param bool $valid
      * @param array $verifiedFields
      * @param array $issues
+     * @param array|null $debugInformation
      */
-    public function __construct(bool $submittable, bool $valid, array $verifiedFields, array $issues)
+    public function __construct(bool $submittable, bool $valid, array $verifiedFields, array $issues, ?array $debugInformation = null)
     {
         $this->submittable = $submittable;
         $this->valid = $valid;
         $this->verifiedFields = $verifiedFields;
         $this->issues = $issues;
+        $this->debugInformation = $debugInformation;
     }
 
     /**
@@ -120,5 +127,15 @@ class VerificationResult
     public function getIssues(): array
     {
         return $this->issues;
+    }
+
+    /**
+     * Returns the debug information or null if no debug information is available.
+     *
+     * @return array|null
+     */
+    public function getDebugInformation(): ?array
+    {
+        return $this->debugInformation;
     }
 }

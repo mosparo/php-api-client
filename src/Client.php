@@ -4,7 +4,7 @@
  * The mosparo PHP Client
  *
  * @author Matthias Zobrist <matthias.zobrist@zepi.net>
- * @copyright 2021-2022 mosparo
+ * @copyright 2021-2025 mosparo
  * @license MIT
  */
 
@@ -115,17 +115,20 @@ class Client
         // Check if it is submittable
         $isSubmittable = false;
         $issues = $res['issues'] ?? [];
+        $debugInformation = null;
         if (isset($res['valid']) && $res['valid'] && isset($res['verificationSignature']) && $res['verificationSignature'] === $verificationSignature) {
             $isSubmittable = true;
         } else if (isset($res['error']) && $res['error']) {
             $issues[] = [ 'message' => $res['errorMessage'] ];
+            $debugInformation = $res['debugInformation'] ?? null;
         }
 
         return new VerificationResult(
             $isSubmittable,
             $res['valid'] ?? false,
             $res['verifiedFields'] ?? [],
-            $issues
+            $issues,
+            $debugInformation
         );
     }
 
@@ -190,13 +193,66 @@ class Client
         $res = $this->sendRequest('GET', $apiEndpoint, $data);
 
         if (isset($res['error'])) {
-            throw new Exception($res['errorMessage'] ?? 'An error occurred in the connection to mosparo.');
+            throw new Exception(
+                $res['errorMessage'] ?? 'An error occurred in the connection to mosparo.',
+                0,
+                null,
+                $res['debugInformation'] ?? null
+            );
         }
 
         return new StatisticResult(
             $res['data']['numberOfValidSubmissions'],
             $res['data']['numberOfSpamSubmissions'],
             $res['data']['numbersByDate']
+        );
+    }
+
+    /**
+     * Stores the rule package content via the mosparo API in the given rule package.
+     *
+     * @param int $rulePackageId
+     * @param string $rulePackageContent
+     * @param string $rulePackageHash
+     * @return \Mosparo\ApiClient\RulePackageImportResult
+     *
+     * @throws \Mosparo\ApiClient\Exception An error occurred while sending the request to mosparo.
+     */
+    public function storeRulePackage(int $rulePackageId, string $rulePackageContent, string $rulePackageHash): RulePackageImportResult
+    {
+        $requestHelper = new RequestHelper($this->publicKey, $this->privateKey);
+
+        // Prepare the request
+        $apiEndpoint = '/api/v1/rule-package/import';
+        $requestData = [
+            'rulePackageId' => $rulePackageId,
+            'rulePackageContent' => $rulePackageContent,
+            'rulePackageHash' => $rulePackageHash,
+        ];
+        $requestSignature = $requestHelper->createHmacHash($apiEndpoint . $requestHelper->toJson($requestData));
+
+        $data = [
+            'auth' => [$this->publicKey, $requestSignature],
+            'headers' => [
+                'Accept' => 'application/json'
+            ],
+            'json' => $requestData
+        ];
+
+        $res = $this->sendRequest('POST', $apiEndpoint, $data);
+
+        if (isset($res['error'])) {
+            throw new Exception(
+                $res['errorMessage'] ?? 'An error occurred in the connection to mosparo.',
+                0,
+                null,
+                $res['debugInformation'] ?? null
+            );
+        }
+
+        return new RulePackageImportResult(
+            $res['successful'] ?? false,
+            $res['verifiedHash'] ?? false
         );
     }
 
