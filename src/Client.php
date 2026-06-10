@@ -69,7 +69,7 @@ class Client
      * @throws \Mosparo\ApiClient\Exception Submit or validation token not available.
      * @throws \Mosparo\ApiClient\Exception An error occurred while sending the request to mosparo.
      */
-    public function verifySubmission(array $formData, string $submitToken = null, string $validationToken = null): VerificationResult
+    public function verifySubmission(array $formData, ?string $submitToken = null, ?string $validationToken = null): VerificationResult
     {
         $requestHelper = new RequestHelper($this->publicKey, $this->privateKey);
 
@@ -149,7 +149,7 @@ class Client
      * @throws \Mosparo\ApiClient\Exception Submit or validation token not available.
      * @throws \Mosparo\ApiClient\Exception An error occurred while sending the request to mosparo.
      */
-    public function validateSubmission(array $formData, string $submitToken = null, string $validationToken = null): VerificationResult
+    public function validateSubmission(array $formData, ?string $submitToken = null, ?string $validationToken = null): VerificationResult
     {
         return $this->verifySubmission($formData, $submitToken, $validationToken);
     }
@@ -165,7 +165,7 @@ class Client
      * @throws \Mosparo\ApiClient\Exception An error occurred while sending the request to mosparo.
      * @throws \Mosparo\ApiClient\Exception Response from API invalid.
      */
-    public function getStatisticByDate(int $range = 0, \DateTime $startDate = null): StatisticResult
+    public function getStatisticByDate(int $range = 0, ?\DateTime $startDate = null): StatisticResult
     {
         $requestHelper = new RequestHelper($this->publicKey, $this->privateKey);
 
